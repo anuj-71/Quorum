@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Plus, Video, MessageSquare, ThumbsUp, AlertTriangle, 
-  ArrowRight, CheckCircle2, Trophy, Briefcase 
+  ArrowRight, CheckCircle2 
 } from 'lucide-react';
 import type { CandidateProfile, FinalDecisionDossier } from '../types';
 import { PRELOADED_SCENARIOS } from '../data/preloadedCandidates';
@@ -22,9 +22,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   candidate,
   onSelectScenario,
   onOpenUpload,
-  onNavigate,
-  onOpenCompare,
-  onOpenJobDescription
+  onNavigate
 }) => {
   return (
     <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto w-full font-sans text-[#151c27]">
@@ -42,35 +40,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
-          {onOpenJobDescription && (
-            <button
-              type="button"
-              onClick={onOpenJobDescription}
-              className="bg-white text-[#151c27] border border-[#e2e8f8] text-xs font-semibold py-2.5 px-3 rounded-md hover:bg-[#f0f3ff] transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-            >
-              <Briefcase size={14} className="text-[#1a146b]" />
-              <span>Job Spec (02_JD)</span>
-            </button>
-          )}
-
-          {onOpenCompare && (
-            <button
-              type="button"
-              onClick={onOpenCompare}
-              className="bg-[#312e81] text-white text-xs font-semibold py-2.5 px-3.5 rounded-md hover:bg-[#1a146b] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <Trophy size={14} className="text-amber-300" />
-              <span>Compare Candidates</span>
-            </button>
-          )}
-
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
             onClick={onOpenUpload}
-            className="bg-[#1a146b] text-white text-xs font-semibold py-2.5 px-4 rounded-md hover:bg-[#312e81] transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+            className="bg-[#1a146b] text-white text-xs font-semibold py-2 px-3.5 rounded-md hover:bg-[#312e81] transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>New Interview</span>
           </button>
         </div>

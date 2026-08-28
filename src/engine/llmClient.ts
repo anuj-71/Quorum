@@ -94,8 +94,8 @@ export async function executeLlmCall(
   // Mode 1: Direct Gemini API Call (Streamlit Cloud / Standalone Deployment)
   if (clientKey && clientKey.length > 10) {
     try {
-      const model = window.__GEMINI_MODEL__ || 'gemini-1.5-flash';
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const model = (typeof window !== 'undefined' && window.__GEMINI_MODEL__) || 'gemini-1.5-flash';
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(clientKey)}`;
 
       const response = await fetch(endpoint, {
         method: 'POST',

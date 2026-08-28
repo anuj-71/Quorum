@@ -12,37 +12,44 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject CSS to make the Streamlit container full-viewport & clean
+# 2. Complete Edge-to-Edge True Fullscreen Styles (eliminates all black borders and padding)
 st.markdown(
     """
     <style>
-        /* Hide Streamlit Header, Footer, and MainMenu */
-        header[data-testid="stHeader"] {
-            display: none !important;
-        }
-        footer {
-            display: none !important;
-        }
-        #MainMenu {
-            visibility: hidden !important;
-        }
-        .stDeployButton {
-            display: none !important;
-        }
-        
-        /* Remove default Streamlit block container padding */
-        .main .block-container {
+        /* Force Root & Streamlit App Containers to 100% viewport */
+        html, body, #root, [data-testid="stAppViewContainer"], [data-testid="stApp"], .main, .block-container {
             padding: 0 !important;
             margin: 0 !important;
-            max-width: 100% !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            background: #f9f9ff !important;
         }
         
-        /* Full width and height for embedded iframe */
+        /* Completely hide Streamlit header, footer, decoration, toolbar */
+        header, footer, #MainMenu, [data-testid="stToolbar"], [data-testid="stHeader"], [data-testid="stDecoration"], .stDeployButton {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* True Fullscreen Iframe covering entire browser viewport */
         iframe {
-            border: none !important;
-            width: 100% !important;
-            min-height: 98vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
             height: 100vh !important;
+            min-height: 100vh !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 999999 !important;
+            background: #f9f9ff !important;
         }
     </style>
     """,
@@ -62,7 +69,7 @@ def ensure_built():
             st.error(f"Build failed: {e}")
 
 def get_bundled_html() -> str:
-    """Reads dist/index.html and inlines CSS and JS into a standalone payload."""
+    """Reads dist/index.html and inlines CSS, JS, and Live API Key into a standalone payload."""
     ensure_built()
     index_path = DIST_DIR / "index.html"
     
@@ -82,13 +89,12 @@ def get_bundled_html() -> str:
             js_content += file.read_text(encoding="utf-8") + "\n"
 
     # Replace external asset links with inlined style and script
-    # 1. Remove external link/script tags
     import re
     clean_html = raw_html
     clean_html = re.sub(r'<link[^>]*rel="stylesheet"[^>]*>', '', clean_html)
     clean_html = re.sub(r'<script[^>]*src="[^"]*"[^>]*></script>', '', clean_html)
 
-    # 2. Extract Gemini API Key from Streamlit Secrets or Environment
+    # Extract Gemini API Key from Streamlit Secrets or Environment
     gemini_key = ""
     try:
         if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
@@ -103,11 +109,11 @@ def get_bundled_html() -> str:
     if gemini_key:
         key_script = f'<script>window.__GEMINI_API_KEY__ = "{gemini_key}";</script>\n'
 
-    # 3. Inject inlined styles into <head>
+    # Inject inlined styles and keys into <head>
     injected_head = f"{key_script}<style>\n{css_content}\n</style>"
     clean_html = clean_html.replace("</head>", f"{injected_head}\n</head>")
 
-    # 4. Inject inlined JS into <body>
+    # Inject inlined JS into <body>
     injected_scripts = f'<script type="module">\n{js_content}\n</script>'
     clean_html = clean_html.replace("</body>", f"{injected_scripts}\n</body>")
 
@@ -115,4 +121,4 @@ def get_bundled_html() -> str:
 
 # 3. Render Quorum in Streamlit
 html_payload = get_bundled_html()
-components.html(html_payload, height=1050, scrolling=True)
+components.html(html_payload, height=1200, scrolling=True)
