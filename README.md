@@ -91,13 +91,17 @@ Each agent evaluates candidates in **complete zero-knowledge isolation** during 
 
 ---
 
-## 🔒 Security Architecture
+## 🔒 Security & Production Hardening
 
 - **Zero Client-Side Secrets**: No API keys are ever stored, exposed, or loaded in the React frontend bundle.
 - **Secure Server-Side Proxy**: Express backend (`server/index.js` on port 3001) holds `GEMINI_API_KEY` from `.env` and proxies structured LLM requests.
+- **Header-Based Transport**: Requests to Google Gemini use the `x-goog-api-key` request header rather than URL query parameters, preventing key exposure in request logs.
+- **25s Upstream Timeout**: All Gemini requests use `AbortController`-based timeouts (25s) with graceful error recovery.
+- **Rate Limiting & CORS**: In-memory rate limiting (60 req/min per IP) via `express-rate-limit` and origin restriction via `ALLOWED_ORIGIN`.
+- **Startup Validation**: Strict environment validation for `PORT` and `GEMINI_MODEL` with fail-fast errors.
 - **Masked Logging**: Server logs display only masked key prefixes (`AQ.Ab8RN...`) and never log full secrets.
 - **Offline Demo Parity**: If no API key is present, Quorum seamlessly falls back to a deterministic offline demo mode that adheres strictly to the same schema and non-averaging logic.
-- **Git Safeguards**: Pre-configured `.gitignore` and secret scanning hooks prevent accidental secret commits.
+- **Git Safeguards**: Pre-configured `.gitignore` and secret scanning hooks (`scripts/check-secrets.js`) prevent accidental secret commits.
 
 ---
 
@@ -133,6 +137,7 @@ Edit `.env` to add your Gemini API key:
 GEMINI_API_KEY=your_actual_gemini_api_key
 GEMINI_MODEL=gemini-1.5-flash
 PORT=3001
+ALLOWED_ORIGIN=http://localhost:5173
 ```
 *(Note: If no key is set, Quorum will automatically operate in high-fidelity `OFFLINE_DEMO` mode).*
 

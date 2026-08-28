@@ -401,7 +401,13 @@ export async function handleRecruiterInterjection(
   opinions: Record<AgentRole, AgentOpinion>,
   existingTurns: DebateTurn[]
 ): Promise<DebateTurn[]> {
-  const prompt = `
+  const nextRound =
+    existingTurns.length > 0 ? existingTurns[existingTurns.length - 1].roundNumber + 1 : 4;
+
+  const results: DebateTurn[] = [];
+
+  // Sequential Call 1: Hiring Manager reacts to Executive Recruiter question
+  const prompt1 = `
 CANDIDATE: ${candidate.name} (Role: ${candidate.targetRole})
 CURRENT PANEL STANDINGS:
 - Technical (Evelyn): ${opinions.technical?.score}/10
@@ -409,43 +415,44 @@ CURRENT PANEL STANDINGS:
 - Hiring Manager (Sarah): ${opinions.hiring_manager?.score}/10
 - Skeptic (Victor): ${opinions.skeptic?.score}/10
 
-The Executive Recruiter (5th Chair) just interjected into the live debate with this instruction/question:
+The Executive Recruiter (5th Chair) just interjected into the deliberation with this directive/question:
 "${userQuestion}"
 
-GENERATE 2 SEQUENTIAL REACTIVE RESPONSES from panel agents:
-1. One from HR or Skeptic addressing the risk or policy implication.
-2. One from Technical or Hiring Manager proposing a concrete execution/contract structure.
-
-OUTPUT JSON matching Array<DebateTurn> format.
+YOUR ROLE: You are Sarah Chen (Director of Engineering & Business ROI).
+Respond directly to the Executive Recruiter's question from your perspective on execution milestones, ramp-up time, and business risk.
+OUTPUT VALID JSON ONLY:
+{
+  "action": "CLARIFY" | "SUPPORT" | "CHALLENGE" | "DEFEND",
+  "statement": "Your verbatim spoken response (2-3 sentences).",
+  "citedQuotes": []
+}
   `.trim();
 
-  const systemPrompt =
-    'You are orchestrating the AI interview panel sequentially reacting to an executive recruiter interjection.';
-
+  let turn1: DebateTurn | null = null;
   try {
-    const { text } = await executeLlmCall(prompt, systemPrompt, {
-      callType: 'RECRUITER_INTERJECTION'
+    const { text } = await executeLlmCall(prompt1, PROMPTS.hiringManagerAgent, {
+      callType: 'RECRUITER_INTERJECTION',
+      agentRole: 'hiring_manager'
     });
     if (text && text !== '{}') {
       const parsed = JSON.parse(text);
-      const list = Array.isArray(parsed) ? parsed : (parsed.turns && Array.isArray(parsed.turns)) ? parsed.turns : null;
-      if (list && list.length > 0) {
-        return list.map((t: any, idx: number) => ({
-          ...t,
-          id: `interject-${Date.now()}-${idx}`,
-          citedQuotes: validateQuotesList(t.citedQuotes, candidate.resumeRawText, candidate.transcriptRawText)
-        }));
+      if (parsed.statement) {
+        turn1 = {
+          id: `interject-${Date.now()}-1`,
+          roundNumber: nextRound,
+          speaker: 'hiring_manager',
+          targetAgent: 'technical',
+          action: parsed.action || 'CLARIFY',
+          statement: parsed.statement,
+          citedQuotes: validateQuotesList(parsed.citedQuotes, candidate.resumeRawText, candidate.transcriptRawText),
+          audioDurationSec: Math.max(10, Math.floor(parsed.statement.length / 15))
+        };
       }
     }
-  } catch {
-    // Fallback
-  }
+  } catch {}
 
-  const nextRound =
-    existingTurns.length > 0 ? existingTurns[existingTurns.length - 1].roundNumber + 1 : 3;
-
-  return [
-    {
+  if (!turn1) {
+    turn1 = {
       id: `interject-${Date.now()}-1`,
       roundNumber: nextRound,
       speaker: 'hiring_manager',
@@ -454,8 +461,53 @@ OUTPUT JSON matching Array<DebateTurn> format.
       statement: `Addressing the Recruiter's question ("${userQuestion}"): If we establish a strict 90-day milestone review tied directly to team collaboration and code reviews, it mitigates the upfront delivery risk while testing alignment in practice.`,
       citedQuotes: [],
       audioDurationSec: 15
-    },
-    {
+    };
+  }
+  results.push(turn1);
+
+  // Sequential Call 2: HR reacts to BOTH Recruiter question and Hiring Manager's response
+  const prompt2 = `
+CANDIDATE: ${candidate.name} (Role: ${candidate.targetRole})
+RECRUITER'S QUESTION: "${userQuestion}"
+
+PRIOR RESPONSE FROM HIRING MANAGER (Sarah Chen):
+"${turn1.statement}"
+
+YOUR ROLE: You are Marcus Sterling (VP of People & Culture).
+React to Sarah's proposed strategy and the Recruiter's question from a culture, retention, and team safety standpoint.
+OUTPUT VALID JSON ONLY:
+{
+  "action": "CHALLENGE" | "SUPPORT" | "CLARIFY" | "DEFEND",
+  "statement": "Your verbatim spoken response (2-3 sentences).",
+  "citedQuotes": []
+}
+  `.trim();
+
+  let turn2: DebateTurn | null = null;
+  try {
+    const { text } = await executeLlmCall(prompt2, PROMPTS.hrAgent, {
+      callType: 'RECRUITER_INTERJECTION',
+      agentRole: 'hr'
+    });
+    if (text && text !== '{}') {
+      const parsed = JSON.parse(text);
+      if (parsed.statement) {
+        turn2 = {
+          id: `interject-${Date.now()}-2`,
+          roundNumber: nextRound,
+          speaker: 'hr',
+          targetAgent: 'hiring_manager',
+          action: parsed.action || 'CHALLENGE',
+          statement: parsed.statement,
+          citedQuotes: validateQuotesList(parsed.citedQuotes, candidate.resumeRawText, candidate.transcriptRawText),
+          audioDurationSec: Math.max(10, Math.floor(parsed.statement.length / 15))
+        };
+      }
+    }
+  } catch {}
+
+  if (!turn2) {
+    turn2 = {
       id: `interject-${Date.now()}-2`,
       roundNumber: nextRound,
       speaker: 'hr',
@@ -464,6 +516,9 @@ OUTPUT JSON matching Array<DebateTurn> format.
       statement: `Even under probationary terms, we must assign an external senior engineering mentor outside their direct reporting line to ensure objective psychological safety check-ins every two weeks.`,
       citedQuotes: [],
       audioDurationSec: 14
-    }
-  ];
+    };
+  }
+  results.push(turn2);
+
+  return results;
 }

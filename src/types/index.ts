@@ -1,4 +1,4 @@
-// Core TypeScript Definitions for Synapse Panel
+// Core TypeScript Definitions for Quorum
 
 export type AgentRole = 'technical' | 'hr' | 'hiring_manager' | 'skeptic';
 

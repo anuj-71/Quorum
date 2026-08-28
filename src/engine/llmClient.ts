@@ -1,5 +1,5 @@
 /**
- * Synapse Panel — Secure LLM Client
+ * Quorum — Secure LLM Client
  *
  * SECURITY ARCHITECTURE:
  * - This file runs entirely in the BROWSER.

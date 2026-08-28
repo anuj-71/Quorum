@@ -32,7 +32,7 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     inputTokenCount: 1840,
     outputTokenCount: 380,
     isolationGuaranteed: true,
-    modelUsed: 'synapse-deterministic-engine-v2'
+    modelUsed: 'quorum-deterministic-engine-v2'
   }
 ];
 
