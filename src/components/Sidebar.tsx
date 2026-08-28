@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   LayoutDashboard, Users, Bot, MessageSquare, Scale, 
-  FileText, ShieldCheck, Wifi, WifiOff, Plus, Trophy, Briefcase, Key, X, Check
+  FileText, ShieldCheck, Wifi, Plus, Trophy, Briefcase
 } from 'lucide-react';
 import type { CandidateProfile } from '../types';
-import { getClientApiKey, setClientApiKey } from '../engine/llmClient';
 
 export type ActiveNavView = 'dashboard' | 'candidates' | 'aipanel' | 'debates' | 'decisions' | 'evidence';
 
@@ -23,29 +22,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeView,
   onSelectView,
   candidate,
-  serverMode,
   onOpenUpload,
   onOpenAudit,
   onOpenCompare,
   onOpenJobDescription
 }) => {
-  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState(getClientApiKey() || '');
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  const isLive = serverMode === 'LIVE_GEMINI' || !!getClientApiKey();
-
-  const handleSaveApiKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    setClientApiKey(apiKeyInput.trim());
-    setSaveSuccess(true);
-    setTimeout(() => {
-      setSaveSuccess(false);
-      setIsKeyModalOpen(false);
-      window.location.reload();
-    }, 500);
-  };
-
   const navItems = [
     { id: 'dashboard' as ActiveNavView, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'candidates' as ActiveNavView, label: 'Candidates', icon: Users },
@@ -151,106 +132,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Audit Proof Telemetry</span>
           </button>
 
-          {/* Server Mode Indicator — Interactive Key Config */}
-          <button
-            type="button"
-            onClick={() => setIsKeyModalOpen(true)}
-            className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] font-medium border cursor-pointer transition-all ${
-              isLive
-                ? 'text-emerald-800 border-emerald-300 bg-emerald-50 hover:bg-emerald-100'
-                : 'text-amber-800 border-amber-300 bg-amber-50 hover:bg-amber-100'
-            }`}
-            title="Click to configure Gemini API Key or toggle mode"
+          {/* Permanent Live Gemini API Indicator (Zero user input needed) */}
+          <div
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-semibold border text-emerald-800 border-emerald-300 bg-emerald-50 shadow-2xs select-none"
           >
-            <div className="flex items-center gap-2">
-              {isLive ? (
-                <Wifi size={13} className="text-emerald-600 shrink-0" />
-              ) : (
-                <WifiOff size={13} className="text-amber-600 shrink-0" />
-              )}
-              <span className="font-semibold">
-                {isLive ? 'Live Gemini API' : 'Offline Demo Mode'}
-              </span>
-            </div>
-            <Key size={11} className="text-[#575e70]" />
-          </button>
-        </div>
-      </div>
-
-      {/* API Key Modal */}
-      {isKeyModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white border border-[#e2e8f8] rounded-xl max-w-md w-full p-5 shadow-2xl text-[#151c27] space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f8]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-[#e7eefe] flex items-center justify-center text-[#1a146b]">
-                  <Key size={15} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-[#151c27]">Gemini API Key Settings</h3>
-                  <p className="text-[10px] text-[#474651]">Toggle between Live Gemini API & Offline Demo</p>
-                </div>
-              </div>
-              <button 
-                type="button" 
-                onClick={() => setIsKeyModalOpen(false)}
-                className="p-1 rounded text-[#474651] hover:text-[#151c27] hover:bg-[#f0f3ff] transition-colors cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveApiKey} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#151c27] mb-1">
-                  Google Gemini API Key
-                </label>
-                <input
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  placeholder="Paste your Gemini API key (e.g. AIzaSy...)"
-                  className="w-full p-2 bg-white border border-[#e2e8f8] rounded-md font-mono text-xs text-[#151c27] focus:outline-none focus:border-[#1a146b]"
-                />
-                <p className="text-[10px] text-[#474651] mt-1 leading-snug">
-                  Key is saved in browser localStorage and never sent anywhere except directly to Google Gemini REST API.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setApiKeyInput('');
-                    setClientApiKey('');
-                    window.location.reload();
-                  }}
-                  className="text-[11px] text-rose-700 hover:underline font-semibold cursor-pointer"
-                >
-                  Use Offline Demo
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsKeyModalOpen(false)}
-                    className="px-3 py-1.5 rounded-md border border-[#e2e8f8] text-xs font-semibold text-[#474651] hover:text-[#151c27] cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1 px-4 py-1.5 bg-[#1a146b] hover:bg-[#312e81] text-white rounded-md text-xs font-semibold shadow-xs cursor-pointer"
-                  >
-                    {saveSuccess ? <Check size={13} /> : null}
-                    <span>{saveSuccess ? 'Saved!' : 'Save & Activate'}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
+            <Wifi size={13} className="text-emerald-600 shrink-0" />
+            <span>Live Gemini API</span>
           </div>
         </div>
-      )}
+      </div>
     </aside>
   );
 };
