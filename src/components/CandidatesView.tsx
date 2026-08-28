@@ -166,7 +166,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                       : 'bg-[#f9f9ff] hover:bg-[#f0f3ff] text-[#151c27] border border-[#e2e8f8]'
                   }`}
                 >
-                  <span>{isSelected ? 'Deliberate Candidate' : 'Select & Deliberate'}</span>
+                  <span>Deliberate Candidate</span>
                   <ArrowRight size={13} />
                 </button>
               </div>

@@ -12,18 +12,18 @@ interface DebateArenaProps {
 
 const getActionBadge = (action: DebateTurn['action']) => {
   switch (action) {
-    case 'CHALLENGE':
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-800 border border-rose-200 rounded text-[10px] uppercase font-bold font-mono"><Swords size={11} /> CHALLENGING</span>;
-    case 'CONCEDE':
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] uppercase font-bold font-mono"><CheckCircle2 size={11} /> CONCEDING POINT</span>;
-    case 'SUPPORT':
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded text-[10px] uppercase font-bold font-mono"><ArrowRight size={11} /> SUPPORTING</span>;
     case 'RAISE_VETO':
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-900 border border-rose-300 rounded text-[10px] uppercase font-bold font-mono"><ShieldAlert size={11} /> RAISING VETO</span>;
+      return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-rose-100 text-rose-900 border-2 border-rose-400 rounded-md text-[11px] uppercase font-extrabold font-mono shadow-2xs"><ShieldAlert size={12} /> RAISING CRITICAL VETO</span>;
+    case 'CHALLENGE':
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-800 border border-rose-300 rounded text-[10px] uppercase font-bold font-mono"><Swords size={11} /> CHALLENGING</span>;
+    case 'CONCEDE':
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded text-[10px] uppercase font-bold font-mono"><CheckCircle2 size={11} /> CONCEDING POINT</span>;
+    case 'SUPPORT':
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded text-[10px] uppercase font-bold font-mono"><ArrowRight size={11} /> SUPPORTING</span>;
     case 'COUNTER_EVIDENCE':
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] uppercase font-bold font-mono"><AlertTriangle size={11} /> COUNTER-EVIDENCE</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded text-[10px] uppercase font-bold font-mono"><AlertTriangle size={11} /> COUNTER-EVIDENCE</span>;
     default:
-      return <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded text-[10px] uppercase font-bold font-mono">{action}</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded text-[10px] uppercase font-bold font-mono">{action}</span>;
   }
 };
 

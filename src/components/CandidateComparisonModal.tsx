@@ -163,7 +163,7 @@ export const CandidateComparisonModal: React.FC<CandidateComparisonModalProps> =
                         : 'bg-white hover:bg-[#f0f3ff] text-[#151c27] border border-[#e2e8f8]'
                     }`}
                   >
-                    <span>Load & Deliberate Profile</span>
+                    <span>Deliberate Candidate</span>
                     <ArrowRight size={13} />
                   </button>
                 </div>

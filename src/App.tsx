@@ -240,10 +240,10 @@ export function App() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8 items-start">
                 {/* Main Debate Feed (7 cols) */}
                 <div className="lg:col-span-7 flex flex-col gap-4">
-                  <div className="h-[480px]">
+                  <div className="h-[580px]">
                     <DebateArena
                       turns={debateTurns}
                       activeTurnIndex={activeTurnIndex}

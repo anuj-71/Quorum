@@ -20,13 +20,13 @@ const getAgentIcon = (role: AgentRole) => {
 
 const getVerdictBadge = (verdict: AgentOpinion['verdict']) => {
   switch (verdict) {
-    case 'STRONG_HIRE': return 'bg-emerald-50 text-emerald-800 border-emerald-200';
-    case 'HIRE': return 'bg-green-50 text-green-800 border-green-200';
-    case 'LEAN_HIRE': return 'bg-yellow-50 text-yellow-800 border-yellow-200';
-    case 'LEAN_NO_HIRE': return 'bg-orange-50 text-orange-800 border-orange-200';
-    case 'NO_HIRE': return 'bg-red-50 text-red-800 border-red-200';
-    case 'CRITICAL_VETO': return 'bg-rose-100 text-rose-900 border-rose-300 font-bold';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'STRONG_HIRE': return 'bg-emerald-100 text-emerald-900 border border-emerald-300 ring-1 ring-emerald-400/30';
+    case 'HIRE': return 'bg-emerald-50 text-emerald-800 border border-emerald-200';
+    case 'LEAN_HIRE': return 'bg-indigo-50 text-indigo-800 border border-indigo-200';
+    case 'LEAN_NO_HIRE': return 'bg-amber-50 text-amber-900 border border-amber-300';
+    case 'NO_HIRE': return 'bg-rose-50 text-rose-800 border border-rose-200';
+    case 'CRITICAL_VETO': return 'bg-rose-100 text-rose-900 border-2 border-rose-400 font-extrabold shadow-2xs';
+    default: return 'bg-gray-100 text-gray-800 border border-gray-200';
   }
 };
 
@@ -73,15 +73,15 @@ export const AgentCards: React.FC<AgentCardsProps> = ({
 
             {/* Verdict & Summary */}
             <div className="flex flex-col p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className={`text-[11px] px-2.5 py-0.5 rounded border font-mono tracking-wider ${getVerdictBadge(opinion.verdict)}`}>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className={`text-xs sm:text-[13px] font-bold px-3 py-1 rounded-md border font-mono tracking-wide uppercase shadow-2xs ${getVerdictBadge(opinion.verdict)}`}>
                   {opinion.verdict.replace(/_/g, ' ')}
                 </span>
                 
-                <div className="flex items-center gap-1.5 text-xs text-[#474651]">
-                  <Activity size={13} className="text-[#575e70]" />
-                  <span>Confidence:</span>
-                  <span className="font-mono font-bold text-[#151c27]">{(opinion.confidence * 100).toFixed(0)}%</span>
+                <div className="flex items-center gap-1 text-[10px] font-mono text-[#575e70] bg-[#f0f3ff] px-2 py-0.5 rounded border border-[#e2e8f8]">
+                  <Activity size={11} className="text-[#575e70]" />
+                  <span>Conf:</span>
+                  <span className="font-bold text-[#151c27]">{(opinion.confidence * 100).toFixed(0)}%</span>
                 </div>
               </div>
 
@@ -97,9 +97,9 @@ export const AgentCards: React.FC<AgentCardsProps> = ({
 
             {/* Citations List */}
             <div className="flex-1 bg-[#f9f9ff] p-4 border-t border-[#e2e8f8]">
-              <div className="text-[10px] uppercase font-mono tracking-widest text-[#474651] mb-2 flex items-center justify-between">
+              <div className="text-[9px] uppercase font-mono tracking-widest text-[#575e70] mb-2 flex items-center justify-between">
                 <span>Verified Source Citations</span>
-                <span className="bg-white border border-[#e2e8f8] px-2 py-0.2 rounded-full text-[#151c27]">{totalCitations}</span>
+                <span className="bg-white border border-[#e2e8f8] px-2 py-0.2 rounded-full text-[#575e70] text-[9px] font-mono">{totalCitations} quotes</span>
               </div>
               
               <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
@@ -172,9 +172,9 @@ export const AgentCards: React.FC<AgentCardsProps> = ({
             <div className="bg-white p-2.5 px-4 border-t border-[#e2e8f8] flex items-center justify-between text-[10px]">
               <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
                 <ShieldCheck size={13} />
-                <span className="uppercase font-mono">Isolated Context Guaranteed</span>
+                <span className="uppercase font-mono text-[9px]">Zero-Knowledge Token Isolation</span>
               </div>
-              <span className="font-mono text-[#575e70]">
+              <span className="font-mono text-[9px] text-[#575e70] bg-[#f9f9ff] px-2 py-0.5 rounded border border-[#e2e8f8]">
                 {opinion.isolationHash?.slice(0, 16) || 'SHA256:VERIFIED'}
               </span>
             </div>
