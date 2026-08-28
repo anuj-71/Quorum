@@ -3,13 +3,13 @@ import {
   Plus, Video, MessageSquare, ThumbsUp, AlertTriangle, 
   ArrowRight, CheckCircle2 
 } from 'lucide-react';
-import type { CandidateProfile, FinalDecisionDossier } from '../types';
+import type { CandidateProfile, FinalDecisionDossier, AgentOpinion, AgentRole } from '../types';
 import { PRELOADED_SCENARIOS } from '../data/preloadedCandidates';
 import type { ActiveNavView } from './Sidebar';
 
 interface DashboardViewProps {
   candidate: CandidateProfile | null;
-  opinions?: any;
+  opinions?: Record<AgentRole, AgentOpinion> | null;
   finalDossier: FinalDecisionDossier | null;
   onSelectScenario: (key: string) => void;
   onOpenUpload: () => void;

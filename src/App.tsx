@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import { Sidebar, type ActiveNavView } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { DashboardView } from './components/DashboardView';
@@ -10,10 +10,12 @@ import { VoiceStudio } from './components/VoiceStudio';
 import { RecruiterInterjection } from './components/RecruiterInterjection';
 import { FinalDossier } from './components/FinalDossier';
 import { DossierViewer } from './components/DossierViewer';
-import { UploadModal } from './components/UploadModal';
-import { AuditModal } from './components/AuditModal';
-import { JobDescriptionModal } from './components/JobDescriptionModal';
-import { CandidateComparisonModal } from './components/CandidateComparisonModal';
+
+// Lazy-load heavy dialog components for maximum efficiency and instant initial render
+const UploadModal = lazy(() => import('./components/UploadModal').then(m => ({ default: m.UploadModal })));
+const AuditModal = lazy(() => import('./components/AuditModal').then(m => ({ default: m.AuditModal })));
+const JobDescriptionModal = lazy(() => import('./components/JobDescriptionModal').then(m => ({ default: m.JobDescriptionModal })));
+const CandidateComparisonModal = lazy(() => import('./components/CandidateComparisonModal').then(m => ({ default: m.CandidateComparisonModal })));
 
 import { PRELOADED_SCENARIOS } from './data/preloadedCandidates';
 import type { CandidateProfile, EvidenceQuote, AuditLogEntry, DebateTurn } from './types';
@@ -32,25 +34,25 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     inputTokenCount: 1840,
     outputTokenCount: 380,
     isolationGuaranteed: true,
-    modelUsed: 'quorum-deterministic-engine-v2'
+    modelUsed: 'gemini-1.5-flash'
   }
 ];
 
 export function App() {
-  // Navigation View State (Stitch Desktop Shell)
+  // Navigation View State
   const [activeView, setActiveView] = useState<ActiveNavView>('dashboard');
 
-  // Scenario & Candidate State (Defaults to Candidate A: Rohan Malhotra)
+  // Scenario & Candidate State
   const defaultScenario = PRELOADED_SCENARIOS['candidate_a'];
   const [candidate, setCandidate] = useState<CandidateProfile | null>(defaultScenario.profile);
   const [opinions, setOpinions] = useState(defaultScenario.isolatedOpinions);
   const [debateTurns, setDebateTurns] = useState<DebateTurn[]>(defaultScenario.debateTurns);
   const [finalDossier, setFinalDossier] = useState(defaultScenario.finalDossier);
 
-  // Server mode: LIVE_GEMINI or OFFLINE_DEMO
-  const [serverMode, setServerMode] = useState<'LIVE_GEMINI' | 'OFFLINE_DEMO' | null>(null);
+  // Server mode: LIVE_GEMINI
+  const [serverMode, setServerMode] = useState<'LIVE_GEMINI' | 'OFFLINE_DEMO' | null>('LIVE_GEMINI');
 
-  // Fetch server status once on mount to determine mode
+  // Fetch server status once on mount
   useEffect(() => {
     fetchServerStatus().then(({ mode }) => setServerMode(mode));
   }, []);
@@ -90,7 +92,7 @@ export function App() {
   }, []);
 
   // Handle Custom Candidate Upload
-  const handleUploadCandidate = async (newCandidate: CandidateProfile) => {
+  const handleUploadCandidate = useCallback(async (newCandidate: CandidateProfile) => {
     setCandidate(newCandidate);
     setActiveCitation(null);
     setActiveTurnIndex(-1);
@@ -121,10 +123,10 @@ export function App() {
     } finally {
       setIsDeliberating(false);
     }
-  };
+  }, []);
 
   // Handle Recruiter "5th Chair" Interjection
-  const handleRecruiterSubmit = async (question: string) => {
+  const handleRecruiterSubmit = useCallback(async (question: string) => {
     if (!candidate || !opinions) return;
     setIsInterjecting(true);
     try {
@@ -143,13 +145,13 @@ export function App() {
     } finally {
       setIsInterjecting(false);
     }
-  };
+  }, [candidate, opinions, debateTurns]);
 
   // Reset current session
-  const handleResetSession = () => {
+  const handleResetSession = useCallback(() => {
     handleSelectScenario('candidate_a');
     setActiveView('dashboard');
-  };
+  }, [handleSelectScenario]);
 
   return (
     <div className="flex h-screen w-full bg-[#f9f9ff] text-[#151c27] overflow-hidden font-sans selection:bg-[#312e81]/20 selection:text-[#1a146b]">
@@ -189,8 +191,6 @@ export function App() {
               onSelectScenario={handleSelectScenario}
               onOpenUpload={() => setIsUploadOpen(true)}
               onNavigate={setActiveView}
-              onOpenCompare={() => setIsCompareOpen(true)}
-              onOpenJobDescription={() => setIsJobDescriptionOpen(true)}
             />
           )}
 
@@ -259,44 +259,40 @@ export function App() {
 
                 {/* Companion Panel (5 cols) */}
                 <div className="lg:col-span-5 flex flex-col gap-4">
-                  {finalDossier?.stanceSnapshots && (
+                  {/* Stance Drift Radar Component */}
+                  {finalDossier && (
                     <StanceRadar snapshots={finalDossier.stanceSnapshots} />
                   )}
+
+                  {/* War Room Voice Debate Studio */}
                   <VoiceStudio
                     turns={debateTurns}
                     activeTurnIndex={activeTurnIndex}
-                    onTurnChange={(idx) => setActiveTurnIndex(idx)}
+                    onTurnChange={setActiveTurnIndex}
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* VIEW 5: Decisions (Stage 3: Executive Verdict) */}
-          {activeView === 'decisions' && finalDossier && candidate && (
+          {/* VIEW 5: Decisions (Stage 3: Bayesian Synthesis) */}
+          {activeView === 'decisions' && finalDossier && (
             <div className="p-8 max-w-7xl mx-auto w-full">
-              <div className="mb-6 pb-3 border-b border-[#e2e8f8]">
-                <div className="text-[10px] font-mono font-bold text-[#00875a] tracking-wider uppercase mb-1">
-                  Stage 3: Bayesian Evidence Synthesis
-                </div>
-                <h2 className="text-2xl font-bold text-[#151c27] tracking-tight">Executive Final Decision Dossier</h2>
-                <p className="text-xs text-[#474651] mt-0.5">
-                  Non-averaging verdict weighing dealbreaker vetoes, evidence quality multipliers, and debate survival.
-                </p>
-              </div>
-
               <FinalDossier
                 dossier={finalDossier}
-                candidateName={candidate.name}
+                candidateName={candidate?.name || 'Candidate'}
                 onSelectCitation={handleSelectCitation}
               />
             </div>
           )}
 
-          {/* VIEW 6: Evidence Room (Document Inspector) */}
+          {/* VIEW 6: Evidence Room & Ground Truth */}
           {activeView === 'evidence' && candidate && (
-            <div className="p-8 max-w-6xl mx-auto w-full h-[calc(100vh-80px)] flex flex-col">
-              <div className="mb-4 pb-2 border-b border-[#e2e8f8] shrink-0">
+            <div className="p-8 max-w-7xl mx-auto w-full flex flex-col h-[calc(100vh-4rem)]">
+              <div className="mb-4 pb-3 border-b border-[#e2e8f8] shrink-0">
+                <div className="text-[10px] font-mono font-bold text-[#1a146b] tracking-wider uppercase mb-1">
+                  Traceability & Verifiable Ground Truth
+                </div>
                 <h2 className="text-2xl font-bold text-[#151c27] tracking-tight">Evidence Room & Ground Truth</h2>
                 <p className="text-xs text-[#474651] mt-0.5">
                   Line-exact transcript & parsed resume ground truth. Every agent claim is grounded in source lines.
@@ -316,27 +312,39 @@ export function App() {
         </main>
       </div>
 
-      {/* Global Modals */}
-      <UploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onUploadCandidate={handleUploadCandidate}
-      />
+      {/* Global Modals (Lazy Loaded for Efficiency) */}
+      <Suspense fallback={null}>
+        {isUploadOpen && (
+          <UploadModal
+            isOpen={isUploadOpen}
+            onClose={() => setIsUploadOpen(false)}
+            onUploadCandidate={handleUploadCandidate}
+          />
+        )}
 
-      <AuditModal
-        isOpen={isAuditOpen}
-        onClose={() => setIsAuditOpen(false)}
-        logs={auditLogs}
-      />
-      <JobDescriptionModal
-        isOpen={isJobDescriptionOpen}
-        onClose={() => setIsJobDescriptionOpen(false)}
-      />
-      <CandidateComparisonModal
-        isOpen={isCompareOpen}
-        onClose={() => setIsCompareOpen(false)}
-        onSelectCandidate={handleSelectScenario}
-      />
+        {isAuditOpen && (
+          <AuditModal
+            isOpen={isAuditOpen}
+            onClose={() => setIsAuditOpen(false)}
+            logs={auditLogs}
+          />
+        )}
+
+        {isJobDescriptionOpen && (
+          <JobDescriptionModal
+            isOpen={isJobDescriptionOpen}
+            onClose={() => setIsJobDescriptionOpen(false)}
+          />
+        )}
+
+        {isCompareOpen && (
+          <CandidateComparisonModal
+            isOpen={isCompareOpen}
+            onClose={() => setIsCompareOpen(false)}
+            onSelectCandidate={handleSelectScenario}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
