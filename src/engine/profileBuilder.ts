@@ -139,7 +139,7 @@ export function parseProfileFromRawText(
     if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.includes('Jan ') || trimmed.includes('Jun ')) {
       claims.push({
         id: `c-res-${idx + 1}`,
-        claim: trimmed.replace(/^[•\-]\s*/, ''),
+        claim: trimmed.replace(/^[•-]\s*/, ''),
         source: 'resume',
         lineNumber: idx + 1,
         rawQuote: trimmed,

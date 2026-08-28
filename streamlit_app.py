@@ -83,16 +83,31 @@ def get_bundled_html() -> str:
 
     # Replace external asset links with inlined style and script
     # 1. Remove external link/script tags
-    clean_html = raw_html
     import re
+    clean_html = raw_html
     clean_html = re.sub(r'<link[^>]*rel="stylesheet"[^>]*>', '', clean_html)
     clean_html = re.sub(r'<script[^>]*src="[^"]*"[^>]*></script>', '', clean_html)
 
-    # 2. Inject inlined styles into <head>
-    injected_styles = f"<style>\n{css_content}\n</style>"
-    clean_html = clean_html.replace("</head>", f"{injected_styles}\n</head>")
+    # 2. Extract Gemini API Key from Streamlit Secrets or Environment
+    gemini_key = ""
+    try:
+        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+            gemini_key = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        pass
+    
+    if not gemini_key:
+        gemini_key = os.environ.get("GEMINI_API_KEY", "")
 
-    # 3. Inject inlined JS into <body>
+    key_script = ""
+    if gemini_key:
+        key_script = f'<script>window.__GEMINI_API_KEY__ = "{gemini_key}";</script>\n'
+
+    # 3. Inject inlined styles into <head>
+    injected_head = f"{key_script}<style>\n{css_content}\n</style>"
+    clean_html = clean_html.replace("</head>", f"{injected_head}\n</head>")
+
+    # 4. Inject inlined JS into <body>
     injected_scripts = f'<script type="module">\n{js_content}\n</script>'
     clean_html = clean_html.replace("</body>", f"{injected_scripts}\n</body>")
 
@@ -100,4 +115,4 @@ def get_bundled_html() -> str:
 
 # 3. Render Quorum in Streamlit
 html_payload = get_bundled_html()
-components.html(html_payload, height=1000, scrolling=True)
+components.html(html_payload, height=1050, scrolling=True)

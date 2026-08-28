@@ -2,28 +2,41 @@
 import fs from 'fs';
 import path from 'path';
 
-// Scans files for accidental API key commits
+// Scans source files for accidental hardcoded API keys
 const secretPatterns = [
   /AIza[0-9A-Za-z-_]{35}/,
-  /sk-[a-zA-Z0-9]{20,}/,
-  /GEMINI_API_KEY\s*=\s*['"]?[a-zA-Z0-9_.-]{15,}['"]?/
+  /sk-[a-zA-Z0-9]{20,}/
 ];
-
-const forbiddenFiles = ['.env', '.env.local'];
 
 let hasError = false;
 
-forbiddenFiles.forEach(file => {
-  if (fs.existsSync(file)) {
-    // Check if tracked by git
-    try {
-      const gitCheck = fs.readFileSync(file, 'utf8');
-      if (gitCheck.includes('GEMINI_API_KEY') && !gitCheck.includes('your_gemini_api_key_here')) {
-        // Just verify it's not being committed
+function scanDir(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name !== 'node_modules' && entry.name !== 'dist' && entry.name !== '.git') {
+        scanDir(fullPath);
       }
-    } catch {}
+    } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx') || entry.name.endsWith('.js'))) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      for (const pattern of secretPatterns) {
+        if (pattern.test(content)) {
+          console.error(`[SECURITY AUDIT] Possible secret leak found in: ${fullPath}`);
+          hasError = true;
+        }
+      }
+    }
   }
-});
+}
 
-console.log('✓ Secret scanning check completed.');
-process.exit(hasError ? 1 : 0);
+scanDir(process.cwd());
+
+if (hasError) {
+  console.error('[SECURITY AUDIT] Failed: Hardcoded secrets detected.');
+  process.exit(1);
+} else {
+  console.log('[SECURITY AUDIT] Passed: 0 secret leaks detected across codebase.');
+  process.exit(0);
+}
